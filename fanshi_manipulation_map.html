@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>凡氏可行｜吊人操作流程圖</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --black:#0a0a0a;--dark:#111;--card:#161616;--border:#2a2a2a;
+  --gold:#c9a84c;--gold-dim:#8a6e2f;--red:#c0392b;
+  --white:#e8e8e8;--muted:#555;
+  --serif:'Noto Serif TC',serif;--mono:'Space Mono',monospace;
+  --s1:#c9a84c;--s2:#c97c2b;--s3:#8b5cf6;--s4:#c0392b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;background:var(--black);color:var(--white);font-family:var(--serif);}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+
+.wrap{max-width:760px;margin:0 auto;padding:48px 20px 80px;position:relative;z-index:1;}
+
+.header{text-align:center;margin-bottom:52px;}
+.brand{font-family:var(--mono);font-size:9px;letter-spacing:.4em;color:var(--gold);margin-bottom:14px;text-transform:uppercase;}
+.header h1{font-size:clamp(20px,5vw,30px);font-weight:700;line-height:1.3;margin-bottom:10px;}
+.header p{font-size:12px;color:var(--muted);line-height:1.9;max-width:480px;margin:0 auto;}
+
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--border) 20%,var(--border) 80%,transparent);margin:0 0 40px;}
+
+/* Intro instruction */
+.instruction{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:20px 24px;margin-bottom:36px;}
+.instruction p{font-size:13px;color:var(--muted);line-height:1.9;}
+.instruction strong{color:var(--white);}
+
+/* Timeline nav */
+.timeline-nav{display:flex;gap:0;margin-bottom:40px;position:relative;}
+.timeline-nav::before{content:'';position:absolute;top:22px;left:0;right:0;height:1px;background:var(--border);z-index:0;}
+.stage-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:1;padding:0 4px;}
+.stage-dot{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);background:var(--black);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--muted);transition:all .3s;font-weight:700;}
+.stage-label{font-size:10px;color:var(--muted);text-align:center;font-family:var(--mono);letter-spacing:.05em;line-height:1.4;transition:color .3s;}
+.stage-btn.active .stage-dot{border-color:var(--gold);background:var(--gold);color:var(--black);}
+.stage-btn.active .stage-label{color:var(--gold);}
+.stage-btn.visited .stage-dot{border-color:var(--gold-dim);background:var(--black);color:var(--gold-dim);}
+.stage-btn.visited .stage-label{color:var(--gold-dim);}
+.stage-btn:hover .stage-dot{border-color:var(--gold-dim);}
+
+/* Stage content */
+.stage-content{display:none;animation:fadeUp .35s ease;}
+.stage-content.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+.stage-header{margin-bottom:24px;}
+.stage-tag{font-family:var(--mono);font-size:9px;letter-spacing:.3em;margin-bottom:6px;}
+.stage-name{font-size:clamp(22px,4vw,28px);font-weight:700;margin-bottom:8px;}
+.stage-desc{font-size:13px;color:var(--muted);line-height:1.8;}
+
+/* Panels */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+@media(max-width:560px){.panels{grid-template-columns:1fr;}}
+
+.panel{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:18px 20px;}
+.panel-label{font-family:var(--mono);font-size:8px;letter-spacing:.25em;margin-bottom:10px;text-transform:uppercase;}
+.panel-text{font-size:13px;color:#aaa;line-height:1.9;}
+.panel-text li{margin-bottom:6px;padding-left:14px;position:relative;}
+.panel-text li::before{content:'·';position:absolute;left:0;color:var(--gold);}
+
+.mechanism-box{background:var(--dark);border:1px solid var(--border);border-radius:4px;padding:16px 20px;margin-bottom:24px;border-left:3px solid var(--gold);}
+.mechanism-label{font-family:var(--mono);font-size:8px;letter-spacing:.25em;color:var(--gold);margin-bottom:8px;text-transform:uppercase;}
+.mechanism-text{font-size:13px;color:#888;line-height:1.9;}
+
+/* Checklist */
+.check-section{margin-bottom:28px;}
+.check-title{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--muted);margin-bottom:14px;}
+.check-grid{display:flex;flex-direction:column;gap:8px;}
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .2s;}
+.check-item:hover{border-color:var(--border);background:#1a1a1a;}
+.check-item.checked{border-color:var(--gold);background:#1c1800;}
+.cb{width:16px;height:16px;border:1px solid var(--muted);border-radius:2px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.check-item.checked .cb{background:var(--gold);border-color:var(--gold);}
+.check-item.checked .cb::after{content:'✓';color:var(--black);font-size:10px;font-weight:700;}
+.check-item-text{font-size:13px;color:#aaa;line-height:1.6;}
+.check-item.checked .check-item-text{color:var(--gold);}
+
+/* Verdict */
+.verdict-box{background:#0d0d0d;border:1px solid #1e1e1e;border-radius:4px;padding:18px 20px;margin-bottom:28px;border-left:3px solid var(--red);}
+.verdict-label{font-family:var(--mono);font-size:8px;letter-spacing:.25em;color:var(--red);margin-bottom:8px;}
+.verdict-text{font-size:14px;color:#e8e8e8;line-height:1.8;font-weight:600;}
+
+/* Nav buttons */
+.nav-row{display:flex;gap:10px;justify-content:flex-end;margin-bottom:48px;}
+.nav-btn{padding:12px 24px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;border-radius:2px;cursor:pointer;transition:all .2s;border:none;}
+.btn-back{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-back:hover{border-color:var(--muted);color:var(--white);}
+.btn-next{background:var(--gold);color:var(--black);font-weight:700;}
+.btn-next:hover{background:#deba5a;}
+.btn-report{background:var(--red);color:var(--white);font-weight:700;}
+.btn-report:hover{background:#a93226;}
+
+/* Path tracker */
+.path-wrap{margin-bottom:40px;}
+.path-title{font-family:var(--mono);font-size:9px;letter-spacing:.25em;color:var(--muted);margin-bottom:16px;text-align:center;}
+.path-bar{display:flex;align-items:center;gap:0;justify-content:center;flex-wrap:wrap;gap:4px;}
+.path-node{display:flex;align-items:center;gap:4px;}
+.path-stage{padding:4px 12px;border-radius:2px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.05em;}
+.path-arrow{color:var(--border);font-size:12px;margin:0 2px;}
+.path-node.active .path-stage{background:var(--gold);color:var(--black);}
+.path-node.inactive .path-stage{background:var(--dark);color:#333;border:1px solid #1e1e1e;}
+
+/* REPORT */
+.report-wrap{display:none;animation:fadeUp .4s ease;}
+.report-wrap.show{display:block;}
+
+.report-intro{text-align:center;padding:32px 0 40px;}
+.report-intro h2{font-size:22px;font-weight:700;color:var(--gold);margin-bottom:12px;}
+.report-intro p{font-size:13px;color:var(--muted);line-height:1.9;}
+
+.report-path{margin-bottom:32px;}
+.report-path-title{font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:var(--gold);margin-bottom:16px;}
+.path-visual{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+.path-visual .pv-stage{padding:8px 16px;border-radius:3px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.05em;}
+.path-visual .pv-arrow{color:var(--border);font-size:16px;}
+
+.report-section{margin-bottom:24px;}
+.rs-label{font-family:var(--mono);font-size:8px;letter-spacing:.3em;color:var(--gold);margin-bottom:12px;}
+.rs-card{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:18px 20px;}
+.rs-stage-name{font-size:13px;font-weight:700;margin-bottom:8px;}
+.rs-checks{font-size:12px;color:#888;line-height:1.9;}
+.rs-check-item{padding:3px 0;color:#777;}
+.rs-check-item::before{content:'→  ';}
+
+.report-conclusion{background:#0d0d0d;border:1px solid var(--border);border-radius:4px;padding:24px;border-left:3px solid var(--gold);margin-bottom:28px;}
+.rc-label{font-family:var(--mono);font-size:8px;letter-spacing:.3em;color:var(--gold);margin-bottom:12px;}
+.rc-text{font-size:14px;color:#bbb;line-height:2.1;}
+.rc-text strong{color:var(--white);}
+
+.download-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;background:var(--gold);color:var(--black);font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.15em;border:none;border-radius:2px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.download-btn:hover{background:#deba5a;}
+.reset-btn{display:block;width:100%;padding:12px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.1em;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .2s;}
+.reset-btn:hover{border-color:var(--muted);color:var(--white);}
+
+/* Hidden report card */
+#reportCard{position:fixed;top:0;left:-9999px;width:720px;background:#0a0a0a;font-family:'Noto Serif TC',serif;z-index:-1;}
+.rc-page{width:720px;background:#0a0a0a;padding-bottom:56px;}
+.rc-hd{background:#14110a;padding:24px 40px 20px;border-bottom:2px solid #c9a84c;text-align:center;margin-bottom:28px;}
+.rc-hd-brand{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.35em;color:#c9a84c;margin-bottom:8px;}
+.rc-hd-title{font-size:22px;font-weight:700;color:#e8e8e8;margin-bottom:6px;}
+.rc-hd-sub{font-family:'Space Mono',monospace;font-size:8px;color:#444;}
+.rc-bd{padding:0 40px;}
+.rc-sec{margin-bottom:20px;}
+.rc-sec-label{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.3em;color:#c9a84c;margin-bottom:8px;}
+.rc-stage-card{background:#111;border:1px solid #1e1e1e;border-radius:4px;padding:14px 18px;margin-bottom:8px;}
+.rc-stage-name{font-size:12px;font-weight:700;margin-bottom:6px;}
+.rc-stage-checks{font-size:11px;color:#666;line-height:1.8;}
+.rc-conc{background:#0d0d0d;border:1px solid #1e1e1e;border-left:3px solid #c9a84c;border-radius:4px;padding:18px 20px;margin-bottom:20px;}
+.rc-conc-label{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.3em;color:#c9a84c;margin-bottom:8px;}
+.rc-conc-text{font-size:12px;color:#888;line-height:2;}
+.rc-foot{border-top:1px solid #1a1800;padding:12px 40px;display:flex;justify-content:space-between;}
+.rc-foot span{font-family:'Space Mono',monospace;font-size:7px;color:#2a2a2a;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="brand">凡氏可行｜壞男免疫系統</div>
+    <h1>吊人操作流程圖</h1>
+    <p>他不是隨便對你好又冷掉的<br>這背後有一套完整的操作邏輯<br>我們來把它拆開來給你看</p>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="instruction">
+    <p><strong>怎麼用這個工具</strong><br>
+    下面有四個階段，這是壞男最常用的循環操作模式<br>
+    每個階段點進去，勾選你在那個時期做過的反應<br>
+    全部看完之後，你會拿到你的完整操控路徑報告</p>
+  </div>
+
+  <!-- Timeline Nav -->
+  <div class="timeline-nav" id="timelineNav">
+    <div class="stage-btn active" onclick="goStage(0)" id="sBtn0">
+      <div class="stage-dot">01</div>
+      <div class="stage-label">投餵期</div>
+    </div>
+    <div class="stage-btn" onclick="goStage(1)" id="sBtn1">
+      <div class="stage-dot">02</div>
+      <div class="stage-label">冷卻期</div>
+    </div>
+    <div class="stage-btn" onclick="goStage(2)" id="sBtn2">
+      <div class="stage-dot">03</div>
+      <div class="stage-label">補糖期</div>
+    </div>
+    <div class="stage-btn" onclick="goStage(3)" id="sBtn3">
+      <div class="stage-dot">04</div>
+      <div class="stage-label">消失期</div>
+    </div>
+  </div>
+
+  <!-- Stage Contents -->
+  <div id="stagesWrap">
+
+    <!-- Stage 0: 投餵期 -->
+    <div class="stage-content active" id="stage0">
+      <div class="stage-header">
+        <div class="stage-tag" style="color:var(--s1)">STAGE 01 · 投餵期</div>
+        <div class="stage-name">他突然對你很好</div>
+        <div class="stage-desc">主動、熱情、甜言蜜語、讓你覺得終於遇到一個懂你的人<br>這個階段的目的只有一個：讓你上癮</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label" style="color:var(--s1)">他在做什麼</div>
+          <div class="panel-text">
+            <ul>
+              <li>每天主動找你，回覆又快又甜</li>
+              <li>說你跟別人不一樣，說他從來沒這樣對人過</li>
+              <li>製造很多「只有我們兩個」的感覺</li>
+              <li>讓你覺得自己被選中了</li>
+              <li>在你身上投入剛好夠讓你有感，但不足以構成承諾的量</li>
+            </ul>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-label" style="color:var(--red)">他的真實意圖</div>
+          <div class="panel-text">
+            <ul>
+              <li>測你的需求感有多高</li>
+              <li>建立你對他的依賴感</li>
+              <li>讓你先欠他一個「前期的甜」</li>
+              <li>確認你這個人好不好控制</li>
+              <li>投資最小成本，換取最大供給</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mechanism-box">
+        <div class="mechanism-label">操控機制</div>
+        <div class="mechanism-text">這叫間歇性強化的第一步——先給你滿滿的，你才會在後來什麼都沒有的時候，拼命想找回這個感覺。他不是真的喜歡你，他是在佈局。你以為那是愛情，其實是他在測你這個人值不值得繼續投資</div>
+      </div>
+
+      <div class="check-section">
+        <div class="check-title">在投餵期，你做過哪些事（全部勾選）</div>
+        <div class="check-grid" id="checks0">
+          <div class="check-item" onclick="toggleCheck(this,0,0)"><div class="cb"></div><div class="check-item-text">心跳加速，覺得這次不一樣</div></div>
+          <div class="check-item" onclick="toggleCheck(this,0,1)"><div class="cb"></div><div class="check-item-text">主動降低自己的防衛，把過去的傷也跟他說了</div></div>
+          <div class="check-item" onclick="toggleCheck(this,0,2)"><div class="cb"></div><div class="check-item-text">開始在朋友面前提到他，說「我最近認識一個人」</div></div>
+          <div class="check-item" onclick="toggleCheck(this,0,3)"><div class="cb"></div><div class="check-item-text">等他的訊息，看到他回覆就心情變好</div></div>
+          <div class="check-item" onclick="toggleCheck(this,0,4)"><div class="cb"></div><div class="check-item-text">開始對他好，回饋他的投餵——煮東西、幫忙、主動關心</div></div>
+          <div class="check-item" onclick="toggleCheck(this,0,5)"><div class="cb"></div><div class="check-item-text">告訴自己「這次是認真的」，調整了自己的期待</div></div>
+        </div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">凡氏說</div>
+        <div class="verdict-text">他投餵你，是因為他知道你之後會回本<br>那些甜不是白給的，是他預支的控制成本</div>
+      </div>
+
+      <div class="nav-row">
+        <button class="nav-btn btn-next" onclick="goStage(1)">下一階段 →</button>
+      </div>
+    </div>
+
+    <!-- Stage 1: 冷卻期 -->
+    <div class="stage-content" id="stage1">
+      <div class="stage-header">
+        <div class="stage-tag" style="color:var(--s2)">STAGE 02 · 冷卻期</div>
+        <div class="stage-name">他突然變冷了</div>
+        <div class="stage-desc">回覆變慢、話變少、態度變淡<br>你開始懷疑是不是自己做錯了什麼</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label" style="color:var(--s2)">他在做什麼</div>
+          <div class="panel-text">
+            <ul>
+              <li>訊息從秒回變成幾小時才回</li>
+              <li>說「最近很忙」「狀態不好」「需要空間」</li>
+              <li>互動品質下降，但沒有消失</li>
+              <li>偶爾給你一點點，讓你覺得還有希望</li>
+              <li>把你放在「備用」的位置繼續掛著</li>
+            </ul>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-label" style="color:var(--red)">他的真實意圖</div>
+          <div class="panel-text">
+            <ul>
+              <li>測試你的需求感有多高——你會不會主動追</li>
+              <li>把注意力的主動權拿回來</li>
+              <li>看你是不是真的好控制</li>
+              <li>讓你開始懷疑自己，降低你的籌碼感</li>
+              <li>他沒有更好的選擇之前，先把你留著</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mechanism-box">
+        <div class="mechanism-label">操控機制</div>
+        <div class="mechanism-text">他把你的注意力從他身上，轉移到「我是不是哪裡出問題了」這件事上。你開始反省自己、找他的理由、主動縮短距離——這正是他要的。你追，他就贏了。你的需求感越高，他的成本越低</div>
+      </div>
+
+      <div class="check-section">
+        <div class="check-title">在冷卻期，你做過哪些事（全部勾選）</div>
+        <div class="check-grid" id="checks1">
+          <div class="check-item" onclick="toggleCheck(this,1,0)"><div class="cb"></div><div class="check-item-text">主動傳訊息打破沉默，問他怎麼了</div></div>
+          <div class="check-item" onclick="toggleCheck(this,1,1)"><div class="cb"></div><div class="check-item-text">幫他找理由：他可能真的很忙、可能有壓力</div></div>
+          <div class="check-item" onclick="toggleCheck(this,1,2)"><div class="cb"></div><div class="check-item-text">回頭翻聊天紀錄，找自己說錯什麼的證據</div></div>
+          <div class="check-item" onclick="toggleCheck(this,1,3)"><div class="cb"></div><div class="check-item-text">偷偷去看他的限動，確認他還在線</div></div>
+          <div class="check-item" onclick="toggleCheck(this,1,4)"><div class="cb"></div><div class="check-item-text">告訴自己「沒關係，我等他」</div></div>
+          <div class="check-item" onclick="toggleCheck(this,1,5)"><div class="cb"></div><div class="check-item-text">開始表現得更好、更體貼，想讓他回來</div></div>
+        </div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">凡氏說</div>
+        <div class="verdict-text">他冷掉不是因為他有事<br>是因為他發現你不需要他主動，你會自己追過來<br>幹，他賺到了</div>
+      </div>
+
+      <div class="nav-row">
+        <button class="nav-btn btn-back" onclick="goStage(0)">← 上一階段</button>
+        <button class="nav-btn btn-next" onclick="goStage(2)">下一階段 →</button>
+      </div>
+    </div>
+
+    <!-- Stage 2: 補糖期 -->
+    <div class="stage-content" id="stage2">
+      <div class="stage-header">
+        <div class="stage-tag" style="color:var(--s3)">STAGE 03 · 補糖期</div>
+        <div class="stage-name">他又突然出現了</div>
+        <div class="stage-desc">像什麼都沒發生一樣、突然又甜回來<br>你忘記他之前怎麼對你的，又重新上架了</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label" style="color:var(--s3)">他在做什麼</div>
+          <div class="panel-text">
+            <ul>
+              <li>突然主動找你，語氣又甜又熟</li>
+              <li>對前面的冷淡輕描淡寫或完全不提</li>
+              <li>給你一點甜，剛好夠讓你覺得「他還是喜歡我的」</li>
+              <li>讓你以為前面的冷是你多想</li>
+              <li>重新充值你對他的依賴，確保你不會真的離開</li>
+            </ul>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-label" style="color:var(--red)">他的真實意圖</div>
+          <div class="panel-text">
+            <ul>
+              <li>你快撐不住了，他來補一點讓你繼續留</li>
+              <li>確認你還在，還好控制</li>
+              <li>重設你的底線——每次補糖之後你的底線會再往下移</li>
+              <li>讓你覺得「忍過去就會好」，所以下次還會忍</li>
+              <li>維持這段關係的最低成本</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mechanism-box">
+        <div class="mechanism-label">操控機制</div>
+        <div class="mechanism-text">間歇性強化的核心就在這裡。不規律的獎勵比固定獎勵更讓人上癮——老虎機就是這個原理。你不知道他什麼時候會出現、什麼時候會消失，所以你永遠在等。他每次補糖，你的上癮感就又被重置一次</div>
+      </div>
+
+      <div class="check-section">
+        <div class="check-title">在補糖期，你做過哪些事（全部勾選）</div>
+        <div class="check-grid" id="checks2">
+          <div class="check-item" onclick="toggleCheck(this,2,0)"><div class="cb"></div><div class="check-item-text">立刻心軟，前面的不爽全部忘記</div></div>
+          <div class="check-item" onclick="toggleCheck(this,2,1)"><div class="cb"></div><div class="check-item-text">告訴自己「他還是喜歡我的，不然他不會回來」</div></div>
+          <div class="check-item" onclick="toggleCheck(this,2,2)"><div class="cb"></div><div class="check-item-text">主動把之前想說的不滿嚥回去，不想破壞氣氛</div></div>
+          <div class="check-item" onclick="toggleCheck(this,2,3)"><div class="cb"></div><div class="check-item-text">比之前更努力，想讓他覺得你值得留下來</div></div>
+          <div class="check-item" onclick="toggleCheck(this,2,4)"><div class="cb"></div><div class="check-item-text">跟朋友說「他最近又好了」</div></div>
+          <div class="check-item" onclick="toggleCheck(this,2,5)"><div class="cb"></div><div class="check-item-text">降低了對這段關係的要求，覺得這樣也可以</div></div>
+        </div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">凡氏說</div>
+        <div class="verdict-text">他補糖不是因為他想清楚了<br>是因為他知道你快跑了，所以他丟一顆糖把你留住<br>妳不是被愛，妳是被管理</div>
+      </div>
+
+      <div class="nav-row">
+        <button class="nav-btn btn-back" onclick="goStage(1)">← 上一階段</button>
+        <button class="nav-btn btn-next" onclick="goStage(3)">下一階段 →</button>
+      </div>
+    </div>
+
+    <!-- Stage 3: 消失期 -->
+    <div class="stage-content" id="stage3">
+      <div class="stage-header">
+        <div class="stage-tag" style="color:var(--s4)">STAGE 04 · 消失期</div>
+        <div class="stage-name">他不見了</div>
+        <div class="stage-desc">已讀不回、找藉口、或直接沒有聲音<br>你開始崩潰，開始等，或者開始反省自己</div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-label" style="color:var(--s4)">他在做什麼</div>
+          <div class="panel-text">
+            <ul>
+              <li>已讀不回，或回覆極度敷衍</li>
+              <li>突然從你的生活裡蒸發</li>
+              <li>找藉口：壓力大、需要獨處、不想傷害你</li>
+              <li>可能同時在找或維持其他供給</li>
+              <li>等你崩潰之後再決定要不要補糖</li>
+            </ul>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-label" style="color:var(--red)">他的真實意圖</div>
+          <div class="panel-text">
+            <ul>
+              <li>你的供給成本對他來說變高了</li>
+              <li>他找到更方便的選項，暫時不需要你</li>
+              <li>讓你在等待中自我懷疑，為他回來做好準備</li>
+              <li>測試你的底線有多低——你能接受被這樣對待嗎</li>
+              <li>完全不負責任地離開，因為你們沒有名分</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mechanism-box">
+        <div class="mechanism-label">操控機制</div>
+        <div class="mechanism-text">消失是整個循環最毒的一步。他不正式結束，因為正式結束就沒辦法回來。他讓你活在一個「不確定」裡——你不知道是不是結束了，所以你無法開始哀悼，無法真的放下，只能繼續等。這是他把你鎖在這段關係裡最有效的方式</div>
+      </div>
+
+      <div class="check-section">
+        <div class="check-title">在消失期，你做過哪些事（全部勾選）</div>
+        <div class="check-grid" id="checks3">
+          <div class="check-item" onclick="toggleCheck(this,3,0)"><div class="cb"></div><div class="check-item-text">傳了很長的訊息，說了很多你一直沒說的話</div></div>
+          <div class="check-item" onclick="toggleCheck(this,3,1)"><div class="cb"></div><div class="check-item-text">反覆看他的上線時間或限動，確認他還活著</div></div>
+          <div class="check-item" onclick="toggleCheck(this,3,2)"><div class="cb"></div><div class="check-item-text">開始問自己「是不是我哪裡做得不夠好」</div></div>
+          <div class="check-item" onclick="toggleCheck(this,3,3)"><div class="cb"></div><div class="check-item-text">跟朋友說「他最近不知道怎麼了」，但還是幫他說話</div></div>
+          <div class="check-item" onclick="toggleCheck(this,3,4)"><div class="cb"></div><div class="check-item-text">告訴自己「等他準備好」，繼續留著</div></div>
+          <div class="check-item" onclick="toggleCheck(this,3,5)"><div class="cb"></div><div class="check-item-text">他一回來你就接受了，沒有追究消失的事</div></div>
+        </div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-label">凡氏說</div>
+        <div class="verdict-text">他消失不是因為他有事<br>是因為沒有名分，他消失不用付任何代價<br>而你還在等，這就是他留著你的方式</div>
+      </div>
+
+      <div class="nav-row">
+        <button class="nav-btn btn-back" onclick="goStage(2)">← 上一階段</button>
+        <button class="nav-btn btn-report" onclick="showReport()">查看我的操控路徑報告 →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- REPORT -->
+  <div class="report-wrap" id="reportWrap">
+    <div class="report-intro">
+      <h2>你的操控路徑報告</h2>
+      <p>這是你在這段關係裡走過的路<br>你現在看到的，是他對你做了什麼，以及你在每個階段是怎麼反應的</p>
+    </div>
+
+    <div class="report-path">
+      <div class="report-path-title">你的操控路徑</div>
+      <div class="path-visual" id="pathVisual"></div>
+    </div>
+
+    <div class="report-section">
+      <div class="rs-label">各階段你的反應</div>
+      <div id="reportDetails"></div>
+    </div>
+
+    <div class="report-conclusion" id="reportConclusion"></div>
+
+    <button class="download-btn" onclick="downloadReport()">↓&nbsp;&nbsp;下載我的操控路徑報告</button>
+    <button class="reset-btn" onclick="resetAll()">重新填寫</button>
+  </div>
+
+</div>
+
+<div id="reportCard"></div>
+
+<script>
+const stageData=[
+  {name:'投餵期',color:'#c9a84c'},
+  {name:'冷卻期',color:'#c97c2b'},
+  {name:'補糖期',color:'#8b5cf6'},
+  {name:'消失期',color:'#c0392b'},
+];
+
+const checkLabels=[
+  ['心跳加速，覺得這次不一樣','主動降低防衛，把過去的傷也說了','開始在朋友面前提到他','等他的訊息，看到他回覆就心情變好','開始對他好、回饋他的投餵','告訴自己「這次是認真的」'],
+  ['主動傳訊息打破沉默，問他怎麼了','幫他找理由：他可能真的很忙','回頭翻聊天紀錄找自己說錯的','偷偷看他的限動確認他還在線','告訴自己「沒關係，我等他」','開始表現得更好、更體貼'],
+  ['立刻心軟，前面的不爽全部忘記','告訴自己「他還是喜歡我的」','把之前想說的不滿嚥回去','比之前更努力','跟朋友說「他最近又好了」','降低了對這段關係的要求'],
+  ['傳了很長的訊息說了很多話','反覆看他的上線時間或限動','問自己「是不是我哪裡做得不夠好」','跟朋友說但還是幫他說話','告訴自己「等他準備好」繼續留著','他一回來就接受了沒有追究'],
+];
+
+let userChecks=[[],[],[],[]];
+let currentStage=0;
+let visitedStages=new Set([0]);
+
+function toggleCheck(el,stage,idx){
+  el.classList.toggle('checked');
+  const checked=el.classList.contains('checked');
+  if(checked){
+    if(!userChecks[stage].includes(idx))userChecks[stage].push(idx);
+  }else{
+    userChecks[stage]=userChecks[stage].filter(i=>i!==idx);
+  }
+}
+
+function goStage(idx){
+  document.querySelectorAll('.stage-content').forEach(s=>s.classList.remove('active'));
+  document.getElementById('stage'+idx).classList.add('active');
+  currentStage=idx;
+  visitedStages.add(idx);
+  updateNav();
+  document.getElementById('stagesWrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function updateNav(){
+  for(let i=0;i<4;i++){
+    const btn=document.getElementById('sBtn'+i);
+    btn.classList.remove('active','visited');
+    if(i===currentStage)btn.classList.add('active');
+    else if(visitedStages.has(i))btn.classList.add('visited');
+  }
+}
+
+function showReport(){
+  document.getElementById('stagesWrap').style.display='none';
+  document.getElementById('timelineNav').style.display='none';
+
+  const rw=document.getElementById('reportWrap');
+  rw.classList.add('show');
+  rw.scrollIntoView({behavior:'smooth',block:'start'});
+
+  // Path visual
+  const pv=document.getElementById('pathVisual');
+  pv.innerHTML='';
+  stageData.forEach((s,i)=>{
+    const node=document.createElement('div');
+    node.style.display='flex';node.style.alignItems='center';node.style.gap='6px';
+    const tag=document.createElement('div');
+    tag.style.cssText=`padding:6px 14px;border-radius:3px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;background:${s.color}22;border:1px solid ${s.color}55;color:${s.color};`;
+    const cnt=userChecks[i].length;
+    tag.textContent=`${s.name} (${cnt})`;
+    node.appendChild(tag);
+    if(i<3){const arr=document.createElement('div');arr.style.cssText='color:#2a2a2a;font-size:14px;';arr.textContent='→';node.appendChild(arr);}
+    pv.appendChild(node);
+  });
+
+  // Details
+  const rd=document.getElementById('reportDetails');
+  rd.innerHTML='';
+  stageData.forEach((s,i)=>{
+    const card=document.createElement('div');
+    card.className='rs-card';card.style.marginBottom='10px';card.style.borderLeft=`3px solid ${s.color}`;
+    const checks=userChecks[i];
+    let checksHtml=checks.length>0
+      ?checks.map(c=>`<div class="rs-check-item">${checkLabels[i][c]}</div>`).join('')
+      :`<div style="font-size:12px;color:#333;">這個階段你沒有勾選任何項目</div>`;
+    card.innerHTML=`<div class="rs-stage-name" style="color:${s.color}">${s.name}</div><div class="rs-checks">${checksHtml}</div>`;
+    rd.appendChild(card);
+  });
+
+  // Conclusion
+  const totalChecks=userChecks.flat().length;
+  let concText='';
+  if(totalChecks>=16){
+    concText=`你幾乎在每個階段都做了他希望你做的事<br><br>你不是感情運氣差，是你的反應模式讓他知道你好控制<br>每一次你幫他找理由、每一次你主動打破沉默、每一次你心軟接受補糖——都是在告訴他：你可以繼續這樣對我<br><br><strong>幹，你不是被愛，你是被管理</strong>`;
+  }else if(totalChecks>=10){
+    concText=`你在這個操控循環裡走得不淺<br><br>你知道哪裡不對，但你的反應還是被他牽著走<br>你的身體比你的腦袋更誠實——你勾的那些，就是你的需求感讓你做出來的<br><br><strong>看到這個循環，是你止血的第一步</strong>`;
+  }else if(totalChecks>=5){
+    concText=`你還沒有完全陷進去，但你已經開始走這條路了<br><br>你有自覺，但自覺還不夠——你還是做了幾件讓他知道你好拿捏的事<br>現在是最好的時間點，在你陷更深之前，先把路徑看清楚<br><br><strong>你現在站的位置，比你以為的更低</strong>`;
+  }else{
+    concText=`你的反應相對高位<br><br>但你來這裡填這份東西，代表你知道有哪裡不對<br>看清楚這個循環是什麼，比任何話術都重要<br><br><strong>穩不是裝出來的，是你真的看穿他在做什麼之後，自然就穩了</strong>`;
+  }
+
+  document.getElementById('reportConclusion').innerHTML=`
+    <div class="rc-label">凡氏結論</div>
+    <div class="rc-text">${concText}</div>`;
+}
+
+async function downloadReport(){
+  const today=new Date();
+  const ds=`${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+
+  const totalChecks=userChecks.flat().length;
+  let concText='';
+  if(totalChecks>=16)concText='你幾乎在每個階段都做了他希望你做的事。你不是感情運氣差，是你的反應模式讓他知道你好控制。幹，你不是被愛，你是被管理';
+  else if(totalChecks>=10)concText='你在這個操控循環裡走得不淺。你知道哪裡不對，但你的反應還是被他牽著走。看到這個循環，是你止血的第一步';
+  else if(totalChecks>=5)concText='你還沒有完全陷進去，但你已經開始走這條路了。現在是最好的時間點，在你陷更深之前，先把路徑看清楚';
+  else concText='你的反應相對高位。但你來這裡填這份東西，代表你知道有哪裡不對。看清楚這個循環，比任何話術都重要';
+
+  const pathHtml=stageData.map((s,i)=>`<span style="padding:4px 10px;border-radius:2px;background:${s.color}22;border:1px solid ${s.color}44;color:${s.color};font-family:'Space Mono',monospace;font-size:8px;font-weight:700;margin-right:4px;">${s.name}(${userChecks[i].length})</span>${i<3?'<span style="color:#2a2a2a;margin-right:4px;">→</span>':''}`).join('');
+
+  const detailsHtml=stageData.map((s,i)=>{
+    const checks=userChecks[i];
+    const checksHtml=checks.length>0
+      ?checks.map(c=>`<div style="font-size:10px;color:#666;padding:3px 0;border-bottom:1px solid #1a1a1a;">→ ${checkLabels[i][c]}</div>`).join('')
+      :`<div style="font-size:10px;color:#2a2a2a;">無勾選項目</div>`;
+    return `<div class="rc-stage-card" style="border-left:3px solid ${s.color}22;">
+      <div class="rc-stage-name" style="color:${s.color}">${s.name}</div>
+      <div class="rc-stage-checks">${checksHtml}</div>
+    </div>`;
+  }).join('');
+
+  const rc=document.getElementById('reportCard');
+  rc.innerHTML=`<div class="rc-page">
+    <div class="rc-hd">
+      <div class="rc-hd-brand">凡氏可行 · 壞男免疫系統 · MANIPULATION MAP</div>
+      <div class="rc-hd-title">吊人操作路徑報告</div>
+      <div class="rc-hd-sub">第二階 / PHASE TWO / ${ds}</div>
+    </div>
+    <div class="rc-bd">
+      <div class="rc-sec">
+        <div class="rc-sec-label">你的操控路徑</div>
+        <div style="padding:12px 16px;background:#111;border:1px solid #1e1e1e;border-radius:4px;">${pathHtml}</div>
+      </div>
+      <div class="rc-sec">
+        <div class="rc-sec-label">各階段你的反應</div>
+        ${detailsHtml}
+      </div>
+      <div class="rc-conc">
+        <div class="rc-conc-label">凡氏結論</div>
+        <div class="rc-conc-text">${concText}</div>
+      </div>
+    </div>
+    <div class="rc-foot">
+      <span class="rc-fl">凡氏可行 / 壞男免疫系統 / 第二階操控路徑報告</span>
+      <span class="rc-fl">版權所有</span>
+    </div>
+  </div>`;
+
+  await document.fonts.ready;
+  await new Promise(r=>setTimeout(r,700));
+
+  try{
+    const rcPage=rc.querySelector('.rc-page');
+    rcPage.style.height='auto';
+    rcPage.style.minHeight='unset';
+    const canvas=await html2canvas(rcPage,{
+      scale:2,useCORS:true,backgroundColor:'#0a0a0a',logging:false,
+      width:720,height:rcPage.scrollHeight,
+      windowWidth:720,windowHeight:rcPage.scrollHeight,
+    });
+    const {jsPDF}=window.jspdf;
+
+    const W=210,H=297;
+    const imgW=W;
+    const imgH=(canvas.height/canvas.width)*W;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+    if(imgH<=H){
+      doc.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,imgW,imgH);
+    }else{
+      const ratio=canvas.width/W;
+      const pageH=H*ratio;
+      let yOff=0,pg=0;
+      while(yOff<canvas.height){
+        const tmp=document.createElement('canvas');
+        tmp.width=canvas.width;tmp.height=Math.min(pageH,canvas.height-yOff);
+        tmp.getContext('2d').drawImage(canvas,0,-yOff);
+        if(pg>0)doc.addPage();
+        doc.addImage(tmp.toDataURL('image/jpeg',0.95),'JPEG',0,0,W,tmp.height/ratio);
+        yOff+=pageH;pg++;
+      }
+    }
+    doc.save(`凡氏操控路徑報告_${ds.replace(/\./g,'')}.pdf`);
+  }catch(e){console.error(e);}
+  rc.innerHTML='';
+}
+
+function resetAll(){
+  userChecks=[[],[],[],[]];
+  visitedStages=new Set([0]);
+  currentStage=0;
+  document.querySelectorAll('.check-item').forEach(el=>el.classList.remove('checked'));
+  document.getElementById('reportWrap').classList.remove('show');
+  document.getElementById('stagesWrap').style.display='block';
+  document.getElementById('timelineNav').style.display='flex';
+  goStage(0);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Load jsPDF
+const s=document.createElement('script');
+s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+document.head.appendChild(s);
+</script>
+</body>
+</html>
