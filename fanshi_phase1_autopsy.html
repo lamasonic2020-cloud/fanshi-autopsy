@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>凡氏可行｜關係驗屍室</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--black:#0a0a0a;--dark:#111;--card:#161616;--border:#2a2a2a;--gold:#c9a84c;--gold-dim:#8a6e2f;--red:#c0392b;--white:#e8e8e8;--muted:#666;--serif:'Noto Serif TC',serif;--mono:'Space Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--white);font-family:var(--serif);min-height:100vh;overflow-x:hidden;}
+.container{max-width:720px;margin:0 auto;padding:40px 20px 80px;}
+.header{text-align:center;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border);}
+.brand-tag{font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;}
+.header h1{font-size:clamp(20px,5vw,30px);font-weight:700;line-height:1.3;margin-bottom:12px;}
+.header .sub{font-size:13px;color:var(--muted);line-height:1.9;}
+.progress-wrap{margin-bottom:40px;}
+.progress-label{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;}
+.progress-bar{height:2px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .5s ease;}
+.steps-dots{display:flex;gap:8px;margin-top:12px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:background .3s;}
+.dot.active{background:var(--gold);}
+.dot.done{background:var(--gold-dim);}
+.section{display:none;animation:fadeUp .4s ease forwards;}
+.section.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.section-num{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.2em;margin-bottom:8px;}
+.section-title{font-size:clamp(18px,4vw,24px);font-weight:700;margin-bottom:8px;line-height:1.3;}
+.section-desc{font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:32px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:24px;margin-bottom:16px;}
+.quiz-q{font-size:14px;font-weight:600;margin-bottom:16px;line-height:1.7;}
+.quiz-q .qnum{font-family:var(--mono);color:var(--gold);font-size:11px;display:block;margin-bottom:6px;}
+.options{display:flex;flex-direction:column;gap:8px;}
+.option{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--dark);border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .2s;font-size:13px;line-height:1.6;text-align:left;color:var(--white);font-family:var(--serif);}
+.option:hover{border-color:var(--gold-dim);background:#1a1a1a;}
+.option.selected{border-color:var(--gold);background:#1c1800;color:var(--gold);}
+.option-dot{width:14px;height:14px;border:1px solid var(--muted);border-radius:50%;flex-shrink:0;margin-top:2px;transition:all .2s;}
+.option.selected .option-dot{background:var(--gold);border-color:var(--gold);}
+.check-item{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.check-item:last-child{border-bottom:none;}
+.checkbox{width:18px;height:18px;border:1px solid var(--muted);border-radius:2px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.checkbox.checked{background:var(--red);border-color:var(--red);}
+.checkbox.checked::after{content:'✓';color:white;font-size:11px;font-weight:700;}
+.check-label{font-size:13px;line-height:1.6;}
+.check-sub{font-size:11px;color:var(--muted);margin-top:3px;font-style:italic;}
+.check-item.checked-item .check-label{color:var(--red);text-decoration:line-through;text-decoration-color:var(--red);}
+.score-bar-wrap{margin:16px 0;}
+.score-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px;font-family:var(--mono);}
+.score-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.score-fill{height:100%;border-radius:3px;transition:width 1s ease;background:var(--red);}
+.text-area{width:100%;background:var(--dark);border:1px solid var(--border);border-radius:3px;padding:16px;color:var(--white);font-family:var(--serif);font-size:13px;line-height:1.7;resize:vertical;min-height:90px;outline:none;transition:border-color .2s;}
+.text-area:focus{border-color:var(--gold-dim);}
+.text-area::placeholder{color:var(--muted);}
+.input-label{font-size:11px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);letter-spacing:.05em;}
+.result-box{border:1px solid var(--gold-dim);background:#110f00;border-radius:4px;padding:20px 24px;margin:16px 0;}
+.result-box .level{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.3em;margin-bottom:8px;}
+.result-box .verdict{font-size:16px;font-weight:700;margin-bottom:8px;}
+.result-box .analysis{font-size:12px;color:#aaa;line-height:1.9;}
+.alert{background:#1a0000;border:1px solid #3d0000;border-radius:3px;padding:14px 16px;font-size:12px;color:#ff6b6b;line-height:1.8;margin:16px 0;}
+.alert strong{color:var(--red);}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+.tag{padding:5px 14px;background:var(--dark);border:1px solid var(--border);border-radius:2px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;font-family:var(--serif);}
+.tag:hover{border-color:var(--gold-dim);color:var(--white);}
+.tag.active{border-color:var(--gold);color:var(--gold);background:#1c1800;}
+.btn-wrap{display:flex;gap:12px;margin-top:32px;justify-content:flex-end;}
+.btn{padding:12px 28px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;border-radius:2px;cursor:pointer;transition:all .2s;border:none;}
+.btn-back{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-back:hover{border-color:var(--muted);color:var(--white);}
+.btn-next{background:var(--gold);color:var(--black);font-weight:700;}
+.btn-next:hover{background:#e0b956;}
+.divider{height:1px;background:var(--border);margin:24px 0;}
+.highlight-text{color:var(--gold);font-weight:700;}
+.download-wrap{margin-top:24px;}
+.download-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;background:var(--gold);color:var(--black);font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.15em;border:none;border-radius:2px;cursor:pointer;transition:all .2s;}
+.download-btn:hover{background:#e0b956;}
+.download-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+.submit-btn{display:block;width:100%;padding:14px;background:transparent;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.1em;border:1px solid var(--border);border-radius:2px;cursor:pointer;margin-top:10px;transition:all .2s;}
+.submit-btn:hover{border-color:var(--muted);color:var(--white);}
+.gen-status{font-family:var(--mono);font-size:11px;color:var(--gold);text-align:center;padding:10px;display:none;}
+.complete-msg{text-align:center;padding:40px 0;}
+.complete-msg .icon{font-size:28px;margin-bottom:20px;}
+.complete-msg h2{font-size:20px;margin-bottom:16px;color:var(--gold);}
+.complete-msg p{font-size:13px;color:var(--muted);line-height:2;max-width:440px;margin:0 auto;}
+
+/* ── Hidden report card ── */
+#reportCard{position:fixed;top:0;left:-9999px;width:794px;background:#0a0a0a;font-family:'Noto Serif TC',serif;color:#e8e8e8;z-index:-1;}
+.rc-page{width:794px;background:#0a0a0a;padding-bottom:56px;position:relative;}
+.rc-header{background:#14110a;padding:28px 48px 22px;border-bottom:2px solid #c9a84c;text-align:center;margin-bottom:28px;}
+.rc-brand{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.35em;color:#c9a84c;margin-bottom:10px;}
+.rc-title{font-size:26px;font-weight:700;color:#e8e8e8;margin-bottom:8px;}
+.rc-sub{font-family:'Space Mono',monospace;font-size:9px;color:#555;letter-spacing:.1em;}
+.rc-date{font-family:'Space Mono',monospace;font-size:8px;color:#3a3a3a;margin-top:6px;}
+.rc-body{padding:0 48px;}
+.rc-section{margin-bottom:18px;}
+.rc-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.25em;color:#c9a84c;margin-bottom:8px;}
+.rc-level-box{background:#111;border:1px solid #222;border-radius:4px;padding:18px 20px 18px 24px;border-left:4px solid #c0392b;}
+.rc-level-name{font-size:18px;font-weight:700;margin-bottom:6px;}
+.rc-score-row{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:8px;color:#555;margin-bottom:5px;}
+.rc-bar-track{height:4px;background:#2a2a2a;border-radius:2px;overflow:hidden;margin-bottom:12px;}
+.rc-bar-fill{height:100%;border-radius:2px;}
+.rc-verdict{font-size:12px;color:#ccc;line-height:1.8;}
+.rc-detail{font-size:11px;color:#777;line-height:1.8;margin-top:6px;}
+.rc-block{background:#111;border:1px solid #1e1e1e;border-radius:4px;padding:14px 18px;margin-top:4px;}
+.rc-block-title{font-size:13px;font-weight:700;color:#e8e8e8;margin-bottom:6px;}
+.rc-block-text{font-size:11px;color:#888;line-height:1.8;}
+.rc-list{padding:4px 0;}
+.rc-li{font-size:11px;color:#ff8a8a;padding:4px 0;border-bottom:1px solid #1a0000;line-height:1.6;}
+.rc-li:last-child{border-bottom:none;}
+.rc-sig{font-size:11px;color:#bbb;padding:4px 0;border-bottom:1px solid #1e1e1e;line-height:1.6;}
+.rc-sig:last-child{border-bottom:none;}
+.rc-alert{background:#1a0000;border:1px solid #3d0000;border-radius:3px;padding:10px 14px;font-size:11px;color:#ff6b6b;line-height:1.7;margin-bottom:10px;}
+.rc-stay{padding:4px 0;}
+.rc-stay-tag{display:inline-block;padding:3px 10px;background:#1c1800;border:1px solid #c9a84c33;border-radius:2px;font-size:10px;color:#c9a84c88;margin:2px;}
+.rc-resonate{background:#0a0a0a;border:1px solid #c9a84c44;border-radius:4px;padding:14px 18px;}
+.rc-resonate-text{font-size:13px;color:#c9a84c;line-height:1.9;font-style:italic;}
+.rc-conclusion{background:#0d0d0d;border:1px solid #1e1e1e;border-left:3px solid #c9a84c;border-radius:4px;padding:18px 20px;}
+.rc-conclusion p{font-size:12px;color:#aaa;line-height:1.9;margin-bottom:4px;}
+.rc-conclusion .key{font-size:13px;font-weight:700;color:#c9a84c;margin:8px 0 4px;}
+.rc-conclusion .end{font-size:11px;color:#444;}
+.rc-footer{position:absolute;bottom:0;left:0;right:0;padding:12px 48px;border-top:1px solid #1a1800;background:#0a0a0a;display:flex;justify-content:space-between;}
+.rc-footer span{font-family:'Space Mono',monospace;font-size:7px;color:#2a2a2a;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="brand-tag">凡氏可行｜壞男免疫系統</div>
+    <h1>第一階：關係驗屍室</h1>
+    <p class="sub">這不是測驗，這是解剖。<br>我不需要你覺得舒服，我需要你看清楚。<br>每一題都是手術刀。誠實填，才有辦法診斷死因。</p>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span id="stepLabel">STEP 01 / 05</span><span id="pctLabel">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="steps-dots" id="stepDots"></div>
+  </div>
+
+  <div class="section active" id="step1">
+    <div class="section-num">MODULE 01</div>
+    <div class="section-title">你最近做了什麼</div>
+    <div class="section-desc">不用想太久。<br>第一直覺是什麼，就選什麼——你的身體比你更誠實。</div>
+    <div id="quizWrap"></div>
+    <div class="btn-wrap"><button class="btn btn-next" onclick="goTo(2)">繼續 →</button></div>
+  </div>
+
+  <div class="section" id="step2">
+    <div class="section-num">MODULE 02</div>
+    <div class="section-title">你給了什麼</div>
+    <div class="section-desc">在沒有名分、沒有承諾的情況下。<br>勾選所有你給過的。不要跳過，跳過的那些才是問題所在。</div>
+    <div class="card"><div id="checklistWrap"></div></div>
+    <div id="checkResult"></div>
+    <div class="btn-wrap">
+      <button class="btn btn-back" onclick="goTo(1)">← 返回</button>
+      <button class="btn btn-next" onclick="goTo(3)">繼續 →</button>
+    </div>
+  </div>
+
+  <div class="section" id="step3">
+    <div class="section-num">MODULE 03</div>
+    <div class="section-title">你在怕什麼</div>
+    <div class="section-desc">壞男最會聞的不是香水，是需求感。<br>我們現在來找到你的需求感是從哪裡長出來的。</div>
+    <div class="card">
+      <div class="quiz-q"><span class="qnum">在關係裡，你最怕的是哪一種情境</span>選一個最接近你的</div>
+      <div class="options" id="fearOpts">
+        <button class="option" onclick="selectFear(0,this)"><div class="option-dot"></div>他突然消失、不回我</button>
+        <button class="option" onclick="selectFear(1,this)"><div class="option-dot"></div>他喜歡上別人</button>
+        <button class="option" onclick="selectFear(2,this)"><div class="option-dot"></div>他覺得我不夠好</button>
+        <button class="option" onclick="selectFear(3,this)"><div class="option-dot"></div>我說錯話讓他不開心</button>
+        <button class="option" onclick="selectFear(4,this)"><div class="option-dot"></div>他以後不再需要我</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="quiz-q"><span class="qnum">他超過三小時沒回你，你第一個念頭是</span></div>
+      <div class="options" id="reactOpts">
+        <button class="option" onclick="selectReact(0,this)"><div class="option-dot"></div>「他是不是不理我了」</button>
+        <button class="option" onclick="selectReact(1,this)"><div class="option-dot"></div>「是不是我哪裡做錯了」</button>
+        <button class="option" onclick="selectReact(2,this)"><div class="option-dot"></div>「他一定在忙」——然後繼續等</button>
+        <button class="option" onclick="selectReact(3,this)"><div class="option-dot"></div>「他是不是跟別人在一起」</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="input-label">你最怕他對你說的一句話是什麼</div>
+      <textarea class="text-area" id="fearWord" placeholder="例如：「我們還是當朋友比較好」" rows="2"></textarea>
+    </div>
+    <div id="needResult"></div>
+    <div class="btn-wrap">
+      <button class="btn btn-back" onclick="goTo(2)">← 返回</button>
+      <button class="btn btn-next" onclick="goTo(4)">繼續 →</button>
+    </div>
+  </div>
+
+  <div class="section" id="step4">
+    <div class="section-num">MODULE 04</div>
+    <div class="section-title">你身上亮著幾個訊號</div>
+    <div class="section-desc">你不是一直遇到壞人。<br>是你身上一直在發出某種東西——壞男天生就能聞到。<br>勾選你有的。</div>
+    <div class="card" id="signalWrap"></div>
+    <div class="card">
+      <div class="input-label">你最近一次「幫他找理由」是什麼情況</div>
+      <textarea class="text-area" id="excuseText" placeholder="他說了什麼，你怎麼說服自己的..." rows="3"></textarea>
+    </div>
+    <div class="card">
+      <div class="input-label">你覺得是什麼讓你很難真的離開（可以選多個）</div>
+      <div class="tags" id="stayTags">
+        <div class="tag" onclick="toggleTag(this)">捨不得前期那些甜</div>
+        <div class="tag" onclick="toggleTag(this)">覺得再努力一點就不一樣了</div>
+        <div class="tag" onclick="toggleTag(this)">怕找不到更好的</div>
+        <div class="tag" onclick="toggleTag(this)">他一出現就心軟</div>
+        <div class="tag" onclick="toggleTag(this)">戒不掉被他選中的感覺</div>
+        <div class="tag" onclick="toggleTag(this)">還不確定這段值不值得放棄</div>
+        <div class="tag" onclick="toggleTag(this)">還在等他變成那個你以為的他</div>
+      </div>
+    </div>
+    <div class="btn-wrap">
+      <button class="btn btn-back" onclick="goTo(3)">← 返回</button>
+      <button class="btn btn-next" onclick="goTo(5)">查看驗屍報告 →</button>
+    </div>
+  </div>
+
+  <div class="section" id="step5">
+    <div class="section-num">MODULE 05</div>
+    <div class="section-title">你的驗屍報告</div>
+    <div class="section-desc">根據你剛才的回答。<br>這不是評判，這是診斷。你準備好看了嗎。</div>
+    <div id="finalReport"></div>
+    <div class="divider"></div>
+    <div class="card">
+      <div class="input-label">這份報告裡，哪一句話最刺中你（選填）</div>
+      <textarea class="text-area" id="resonateText" placeholder="寫下來。認清楚自己死在哪裡，是止血的第一步。" rows="3"></textarea>
+    </div>
+    <div class="download-wrap">
+      <button class="download-btn" id="dlBtn" onclick="downloadReport()">↓&nbsp;&nbsp;下載我的驗屍報告 PDF</button>
+      <div class="gen-status" id="genStatus"></div>
+      <button class="submit-btn" onclick="submitAll()">提交報告 → 進入第二階</button>
+    </div>
+  </div>
+
+  <div class="section" id="stepDone">
+    <div class="complete-msg">
+      <div class="icon">⚗️</div>
+      <h2>驗屍完成</h2>
+      <p>你現在知道的事，比大多數人都多。<br>大多數人到死都不承認自己死在哪裡。<br><br>你剛才做到了。<br><br><span class="highlight-text">下一步：第二階 — 壞男解剖台</span><br>我們去看那個讓你上癮的人，是怎麼一步一步操作你的。</p>
+    </div>
+  </div>
+</div>
+
+<div id="reportCard"></div>
+
+<script>
+const TOTAL=5;
+let cur=1,quizScore=0,checkCount=0,signalCount=0,fearIdx=-1,reactIdx=-1;
+let checkedItems=[],checkedSignals=[],stayReasons=[];
+let scores={};
+
+const quizData=[
+  {id:'q1',q:'他超過一天沒回你，你傳了第二條，甚至第三條',yes:3},
+  {id:'q2',q:'你偷偷去看了他的限動，但沒有任何回應',yes:2},
+  {id:'q3',q:'他說了一句話，你解讀了超過十分鐘',yes:2},
+  {id:'q4',q:'你故意在他帳號點了讚，或發了一則他一定看得到的限動',yes:3},
+  {id:'q5',q:'他說「最近很忙」，你說「沒關係，我等你」',yes:4},
+  {id:'q6',q:'他做了某件事讓你不舒服，但你替他想了一個理由說服自己',yes:4},
+  {id:'q7',q:'他一找你，你放下手邊所有事立刻回應',yes:3},
+  {id:'q8',q:'你在沒有名分的情況下，做了本來應該留給正式對象才做的事',yes:4},
+];
+const checklistData=[
+  {text:'陪他度過低潮、情緒崩潰、半夜崩壞',sub:'你當了他的免費情緒垃圾桶'},
+  {text:'深夜陪他說話，隔天你自己還要上班',sub:'你用睡眠換他一時的注意力'},
+  {text:'送過禮物或幫他付過帳',sub:'你在用錢買一個還沒確定存在的關係'},
+  {text:'幫他出主意、解決問題、理他的爛攤子',sub:'你用腦力在爭一個沒人給你的位置'},
+  {text:'他需要你的時候你在，他不需要你的時候你消失',sub:'你的時間只有他要才算數'},
+  {text:'在沒有名分的狀態下，給出了正宮規格的付出',sub:'你用正宮的成本，服務了一個曖昧對象'},
+  {text:'告訴過自己「再給他一次機會」',sub:'你的底線不是線，是橡皮筋'},
+  {text:'他知道你不會真的離開',sub:'是你的行動告訴他的，不是他猜的'},
+];
+const signalData=[
+  '我不敢表達不滿，怕他不開心或突然冷掉',
+  '我很怕沉默，會主動打破，因為不確定他怎麼了',
+  '他一回來，我就忘記他之前怎麼對待我',
+  '我很容易覺得「是不是我的問題」',
+  '我不敢直接問清楚關係，怕破壞現在的氣氛',
+  '在這段關係裡，我明顯比他更在乎',
+  '我說過「算了，不要給他壓力」',
+  '我知道他對我不公平，但我一直在替他保留情面',
+];
+const fearAnalysis=[
+  {label:'消失焦慮型',text:'你怕的不是失去他這個人。你怕的是失去「被他需要」的那個感覺。每次他不回，你的大腦就進入最壞劇本——這叫確認感上癮，不叫愛。'},
+  {label:'競爭恐懼型',text:'你在和一個想像中的對手競爭。但你有沒有想過：一個值得讓你競爭的人，不應該讓你有機會不安全。'},
+  {label:'自我否定型',text:'你把他每一個行為都當成對你的評分。所以你在這段關係裡不是在相愛，你是在表演一個他會喜歡的人設。'},
+  {label:'討好依賴型',text:'你的底線是由他的情緒決定的，不是你自己的。他今天心情好你就覺得安全；他今天冷掉你就開始找自己的問題。這不叫溫柔，叫失去重心。'},
+  {label:'被拋棄恐懼型',text:'你怕自己變得不必要。所以你一直在創造自己的必要性——陪伴、供給、理解、等待。你在用付出換一個不確定會給你的位置。'},
+];
+
+function buildQuiz(){
+  const w=document.getElementById('quizWrap');
+  quizData.forEach((q,i)=>{
+    const c=document.createElement('div');c.className='card';c.style.marginBottom='12px';
+    c.innerHTML=`<div class="quiz-q"><span class="qnum">Q${String(i+1).padStart(2,'0')}</span>${q.q}</div>
+    <div class="options">
+      <button class="option" onclick="selectQuiz('${q.id}','yes',${q.yes},this)"><div class="option-dot"></div>做過</button>
+      <button class="option" onclick="selectQuiz('${q.id}','no',0,this)"><div class="option-dot"></div>沒有</button>
+    </div>`;
+    w.appendChild(c);
+  });
+}
+function buildChecklist(){
+  const w=document.getElementById('checklistWrap');
+  checklistData.forEach((item,i)=>{
+    const el=document.createElement('div');el.className='check-item';el.id=`chk${i}`;
+    el.onclick=()=>toggleCheck(i,item);
+    el.innerHTML=`<div class="checkbox" id="cb${i}"></div><div><div class="check-label">${item.text}</div><div class="check-sub">${item.sub}</div></div>`;
+    w.appendChild(el);
+  });
+}
+function buildSignals(){
+  const w=document.getElementById('signalWrap');
+  w.innerHTML=`<div class="quiz-q"><span class="qnum">以下哪些你有，全部勾選</span></div>`;
+  signalData.forEach((s,i)=>{
+    const el=document.createElement('div');el.className='check-item';el.id=`sig${i}`;
+    el.onclick=()=>toggleSignal(i,s);
+    el.innerHTML=`<div class="checkbox" id="scb${i}"></div><div class="check-label">${s}</div>`;
+    w.appendChild(el);
+  });
+}
+function selectQuiz(id,val,score,btn){
+  btn.closest('.options').querySelectorAll('.option').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  scores[id]=val==='yes'?score:0;
+  quizScore=Object.values(scores).reduce((a,b)=>a+b,0);
+}
+function toggleCheck(i,item){
+  const cb=document.getElementById('cb'+i),row=document.getElementById('chk'+i);
+  const on=cb.classList.toggle('checked');row.classList.toggle('checked-item',on);
+  if(on){checkedItems.push(item.text);checkCount++;}
+  else{checkedItems=checkedItems.filter(x=>x!==item.text);checkCount--;}
+  const res=document.getElementById('checkResult');
+  if(checkCount>=4)res.innerHTML=`<div class="alert"><strong>免費供貨模式，已確認啟動。</strong><br>你已經給出了 ${checkCount} 種付出，而對方承諾了什麼？<br>這不叫深情。這叫沒有標籤的供給關係——你在用正宮的成本，服務一個連名分都不給你的人。</div>`;
+  else if(checkCount>=2)res.innerHTML=`<div class="alert">你勾了 ${checkCount} 項。繼續往下看，別跳過。</div>`;
+  else res.innerHTML='';
+}
+function toggleSignal(i,text){
+  const cb=document.getElementById('scb'+i),on=cb.classList.toggle('checked');
+  if(on){checkedSignals.push(text);signalCount++;}
+  else{checkedSignals=checkedSignals.filter(x=>x!==text);signalCount--;}
+}
+function selectFear(idx,btn){
+  document.querySelectorAll('#fearOpts .option').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');fearIdx=idx;
+  const fa=fearAnalysis[idx];
+  document.getElementById('needResult').innerHTML=`<div class="result-box"><div class="level">需求感類型 — 初步診斷</div><div class="verdict">${fa.label}</div><div class="analysis">${fa.text}</div></div>`;
+}
+function selectReact(idx,btn){
+  document.querySelectorAll('#reactOpts .option').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');reactIdx=idx;
+}
+function toggleTag(el){
+  el.classList.toggle('active');
+  stayReasons=Array.from(document.querySelectorAll('#stayTags .tag.active')).map(t=>t.textContent.trim());
+}
+function getLevelData(){
+  const t=quizScore;
+  if(t>=18)return{level:'深度低位',color:'#c0392b',verdict:'你目前的狀態，讓對方幾乎不需要付出任何成本，就能持有你。',detail:'你給得太多，等得太久，底線太軟。這不是妳的錯——但繼續下去，是妳的選擇。你不是不知道，你只是還沒有承認。'};
+  if(t>=12)return{level:'中度低位',color:'#c97c2b',verdict:'你知道哪裡不對，但你還是做了。',detail:'這叫「明知道又怎樣」。你的腦袋知道，你的情緒還沒跟上。壞男最喜歡這種狀態的人——因為你很好凹，但凹你不需要費太大力氣。'};
+  if(t>=5)return{level:'輕度低位',color:'#c9a84c',verdict:'你還沒有完全失去自己，但某些裂縫已經開了。',detail:'小裂縫不會自己癒合。你每一次「算了，這次就這樣」，都是在讓那條縫再開大一點。'};
+  return{level:'狀態相對穩定',color:'#4caf7d',verdict:'你目前的行為相對高位。',detail:'但你在這裡，代表你知道自己還有什麼地方沒想透。繼續往下走，穩是建立出來的，不是裝出來的。'};
+}
+function buildFinalReport(){
+  const w=document.getElementById('finalReport');
+  const ld=getLevelData();
+  let sa='';
+  if(signalCount>=5)sa=`<div class="alert"><strong>高吸引壞男體質，確認。</strong><br>你身上有 ${signalCount} 個訊號同時亮著。壞男不需要全中，他找到一個缺口就夠了。</div>`;
+  else if(signalCount>=3)sa=`<div class="alert">你有 ${signalCount} 個訊號亮著。壞男在找人的時候，只要聞到一個就夠了。</div>`;
+  w.innerHTML=`
+  <div class="result-box" style="border-color:${ld.color}30;background:#0d0d0d">
+    <div class="level">低位程度評估</div>
+    <div class="verdict" style="color:${ld.color}">${ld.level}</div>
+    <div class="score-bar-wrap">
+      <div class="score-label"><span>低位分數</span><span>${quizScore} / 23</span></div>
+      <div class="score-track"><div class="score-fill" style="width:${Math.min(100,quizScore/23*100)}%"></div></div>
+    </div>
+    <div class="analysis">${ld.verdict}<br><br>${ld.detail}</div>
+  </div>
+  ${fearIdx>=0?`<div class="result-box" style="margin-top:12px"><div class="level">需求感根源</div><div class="verdict">${fearAnalysis[fearIdx].label}</div><div class="analysis">${fearAnalysis[fearIdx].text}</div></div>`:''}
+  ${sa}
+  <div class="card" style="margin-top:16px">
+    <div class="quiz-q"><span class="qnum">驗屍結論</span></div>
+    <div style="font-size:13px;color:#bbb;line-height:2.1">
+      你來這裡，不是因為你不夠好。<br>
+      你來這裡，是因為你一直在用付出換一個沒有問過你要什麼的人。<br><br>
+      <span class="highlight-text">你的關係死在哪裡，你現在知道了。</span><br>
+      這是你止血的起點，不是終點。
+    </div>
+  </div>`;
+}
+
+function buildReportCard(){
+  const ld=getLevelData();
+  const today=new Date();
+  const ds=`${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+  const resonate=document.getElementById('resonateText').value.trim();
+  const pct=Math.min(100,Math.round(quizScore/23*100));
+
+  let supplyHtml='';
+  if(checkedItems.length>0){
+    supplyHtml=`<div class="rc-section">
+      <div class="rc-label">免費供貨清單 · 你勾選了 ${checkedItems.length} 項</div>
+      <div class="rc-block" style="background:#1a0000;border-color:#3d0000;">
+        <div class="rc-list">${checkedItems.map(i=>`<div class="rc-li">· ${i}</div>`).join('')}</div>
+      </div>
+    </div>`;
+  }
+  let fearHtml='';
+  if(fearIdx>=0){
+    const fa=fearAnalysis[fearIdx];
+    fearHtml=`<div class="rc-section">
+      <div class="rc-label">需求感根源 / NEED TYPE</div>
+      <div class="rc-block" style="background:#110f00;border-color:#8a6e2f44;">
+        <div class="rc-block-title">${fa.label}</div>
+        <div class="rc-block-text">${fa.text}</div>
+      </div>
+    </div>`;
+  }
+  let signalHtml='';
+  if(checkedSignals.length>0){
+    const alertHtml=signalCount>=5?`<div class="rc-alert"><strong>高吸引壞男體質，確認。</strong> 你身上有 ${signalCount} 個訊號同時亮著。壞男不需要全中，他找到一個缺口就夠了。</div>`:'';
+    signalHtml=`<div class="rc-section">
+      <div class="rc-label">好騙訊號 · ${signalCount} 個亮著</div>
+      ${alertHtml}
+      <div class="rc-block"><div class="rc-list">${checkedSignals.map(s=>`<div class="rc-sig">→ ${s}</div>`).join('')}</div></div>
+    </div>`;
+  }
+  let stayHtml='';
+  if(stayReasons.length>0){
+    stayHtml=`<div class="rc-section">
+      <div class="rc-label">你說你很難離開，因為</div>
+      <div class="rc-stay">${stayReasons.map(r=>`<span class="rc-stay-tag">${r}</span>`).join('')}</div>
+    </div>`;
+  }
+  let resonateHtml='';
+  if(resonate){
+    resonateHtml=`<div class="rc-section">
+      <div class="rc-label">最刺中你的那句話</div>
+      <div class="rc-resonate"><div class="rc-resonate-text">「${resonate}」</div></div>
+    </div>`;
+  }
+
+  return `<div class="rc-page">
+    <div class="rc-header">
+      <div class="rc-brand">凡氏可行 · 壞男免疫系統 · AUTOPSY REPORT</div>
+      <div class="rc-title">關係驗屍報告</div>
+      <div class="rc-sub">第一階 / PHASE ONE / DIAGNOSTIC COMPLETE</div>
+      <div class="rc-date">診斷日期：${ds}</div>
+    </div>
+    <div class="rc-body">
+      <div class="rc-section">
+        <div class="rc-label">低位程度評估 / LEVEL ASSESSMENT</div>
+        <div class="rc-level-box" style="border-left-color:${ld.color}">
+          <div class="rc-level-name" style="color:${ld.color}">${ld.level}</div>
+          <div class="rc-score-row"><span>低位分數</span><span>${quizScore} / 23</span></div>
+          <div class="rc-bar-track"><div class="rc-bar-fill" style="width:${pct}%;background:${ld.color}"></div></div>
+          <div class="rc-verdict">${ld.verdict}</div>
+          <div class="rc-detail">${ld.detail}</div>
+        </div>
+      </div>
+      ${fearHtml}${supplyHtml}${signalHtml}${stayHtml}${resonateHtml}
+      <div class="rc-section">
+        <div class="rc-conclusion">
+          <p>你來這裡，不是因為你不夠好。</p>
+          <p>你來這裡，是因為你一直在用付出換一個沒有問過你要什麼的人。</p>
+          <div class="key">你的關係死在哪裡，你現在知道了。</div>
+          <div class="end">這是你止血的起點，不是終點。</div>
+        </div>
+      </div>
+    </div>
+    <div class="rc-footer">
+      <span>凡氏可行 / 壞男免疫系統 / 第一階驗屍報告</span>
+      <span>版權所有 · fanshikexing.com</span>
+    </div>
+  </div>`;
+}
+
+async function downloadReport(){
+  const btn=document.getElementById('dlBtn');
+  const st=document.getElementById('genStatus');
+  btn.disabled=true;st.style.display='block';st.textContent='正在生成報告，請稍候...';
+  await new Promise(r=>setTimeout(r,100));
+  try{
+    const rc=document.getElementById('reportCard');
+    rc.innerHTML=buildReportCard();
+    await document.fonts.ready;
+    await new Promise(r=>setTimeout(r,800));
+
+    const page=rc.querySelector('.rc-page');
+    const canvas=await html2canvas(page,{
+      scale:2,useCORS:true,allowTaint:true,
+      backgroundColor:'#0a0a0a',logging:false,width:794,
+    });
+
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const W=210,H=297;
+    const imgW=W;
+    const imgH=(canvas.height/canvas.width)*W;
+
+    if(imgH<=H){
+      doc.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,imgW,imgH);
+    } else {
+      const ratio=canvas.width/W;
+      const pageHeightPx=H*ratio;
+      let yOff=0,pageNum=0;
+      while(yOff<canvas.height){
+        const tmp=document.createElement('canvas');
+        tmp.width=canvas.width;
+        tmp.height=Math.min(pageHeightPx,canvas.height-yOff);
+        tmp.getContext('2d').drawImage(canvas,0,-yOff);
+        if(pageNum>0)doc.addPage();
+        doc.addImage(tmp.toDataURL('image/jpeg',0.95),'JPEG',0,0,W,tmp.height/ratio);
+        yOff+=pageHeightPx;pageNum++;
+      }
+    }
+
+    const today=new Date();
+    const ds=`${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+    doc.save(`凡氏驗屍報告_${ds}.pdf`);
+    rc.innerHTML='';
+    st.textContent='✓ 報告已下載';
+    setTimeout(()=>{st.style.display='none';},3000);
+  }catch(e){
+    console.error(e);
+    st.textContent='下載失敗，請重試';
+  }
+  btn.disabled=false;
+}
+
+function updateProgress(){
+  const pct=((cur-1)/TOTAL)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('stepLabel').textContent=`STEP 0${cur} / 0${TOTAL}`;
+  document.getElementById('pctLabel').textContent=Math.round(pct)+'%';
+  const dots=document.getElementById('stepDots');dots.innerHTML='';
+  for(let i=1;i<=TOTAL;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i<cur?' done':i===cur?' active':'');
+    dots.appendChild(d);
+  }
+}
+function goTo(step){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  if(step>TOTAL){
+    document.getElementById('stepDone').classList.add('active');
+    document.getElementById('progressFill').style.width='100%';
+    document.getElementById('stepLabel').textContent='完成';
+    document.getElementById('pctLabel').textContent='100%';
+    return;
+  }
+  cur=step;document.getElementById('step'+step).classList.add('active');
+  updateProgress();if(step===5)buildFinalReport();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function submitAll(){goTo(6);}
+buildQuiz();buildChecklist();buildSignals();updateProgress();
+</script>
+</body>
+</html>
